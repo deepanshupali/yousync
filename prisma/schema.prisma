@@ -19,13 +19,15 @@ model User {
   id            String    @id @default(cuid())
   email         String?   @unique
   name          String?
-  avatar        String?
-  role          String?   @default("USER")
+  image         String?   // 👈 instead of avatar
+  emailVerified DateTime?
+  role          String?   @default("USER") // you can keep this
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
 }
+
 
 model Account {
   id                 String   @id @default(cuid())
