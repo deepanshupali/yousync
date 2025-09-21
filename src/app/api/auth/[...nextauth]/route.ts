@@ -20,7 +20,7 @@ const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async redirect({ url, baseUrl }) {
-      return `${baseUrl}/dashboard`; // 👈 Always redirect to dashboard
+      return `${baseUrl}/watchparty`; // 👈 Always redirect to watchparty
     },
     async signIn({ profile }) {
       console.log("Profile:", profile);
