@@ -8,7 +8,10 @@ function generateRoomId() {
   return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
-export async function POST() {
+export async function POST(req: Request) {
+  const body = await req.json();
+  const { title } = body;
+
   const session = await getServerSession(authOptions);
   console.log("Session:", session);
   if (!session || !session.user) {
@@ -44,10 +47,10 @@ export async function POST() {
   const room = await prisma.room.create({
     data: {
       id: roomId,
-      title: `Room ${roomId}`,
+      title: title || `Room ${roomId}`, // 👈 title from user or fallback
       adminId: userId,
     },
   });
 
-  return NextResponse.json({ id: room.id });
+  return NextResponse.json({ id: room.id, title: room.title });
 }

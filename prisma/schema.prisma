@@ -79,7 +79,7 @@ model Room {
   id        String       @id 
   title     String
   adminId   String       @unique   // one user can own only one room
-  admin     User         @relation("UserRooms", fields: [adminId], references: [id])
+  admin     User         @relation("UserRooms", fields: [adminId], references: [id], onDelete: Cascade)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
