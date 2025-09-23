@@ -1,91 +1,68 @@
 "use client";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { signIn } from "next-auth/react";
+import { FcGoogle } from "react-icons/fc";
+import { Sparkles } from "lucide-react";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   return (
-    <div className={cn("flex flex-col gap-6 ", className)} {...props}>
-      <Card className="dark:bg-[#283240]">
-        <CardHeader>
-          <CardTitle className="text-center text-3xl font-extrabold">
-            Login
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center gap-6 w-full max-w-md mx-auto",
+        className
+      )}
+      {...props}
+    >
+      <Card className="w-full shadow-xl dark:bg-[#283240] border-0 rounded-2xl">
+        <CardHeader className="text-center space-y-2">
+          <CardTitle
+            className="text-3xl font-extrabold tracking-tight 
+             bg-gradient-to-r from-purple-600 to-blue-500 dark:from-purple-400 dark:to-blue-300 
+             bg-clip-text text-transparent"
+          >
+            Welcome Back 🎬
           </CardTitle>
+
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            Sign in to start your watch party
+          </p>
         </CardHeader>
-        <CardContent>
-          <form>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-3">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  className="py-5"
-                  required
-                />
-              </div>
-              <div className="grid gap-3">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto text-blue-500 text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-                <Input
-                  className="py-5"
-                  id="password"
-                  type="password"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-3">
-                <Button
-                  type="submit"
-                  className="w-full bg-blue-500 text-white hover:bg-blue-600"
-                >
-                  Login
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full bg-green-500 text-white hover:bg-green-600"
-                  onClick={() => signIn("google")}
-                >
-                  Login with Google
-                </Button>
-              </div>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <a
-                href="#"
-                className="text-blue-500 underline underline-offset-4 hover:underline"
-              >
-                Sign up
-              </a>
-            </div>
-          </form>
+        <CardContent className="flex flex-col gap-4">
+          {/* Google Login */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => signIn("google")}
+            className="w-full flex items-center justify-center gap-2 py-6 text-lg font-semibold border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          >
+            <FcGoogle className="text-2xl" />
+            Continue with Google
+          </Button>
+
+          {/* Divider */}
+          <div className="flex items-center gap-2 text-neutral-400 text-xs uppercase">
+            <div className="flex-1 h-px bg-neutral-300 dark:bg-neutral-700"></div>
+            or
+            <div className="flex-1 h-px bg-neutral-300 dark:bg-neutral-700"></div>
+          </div>
+
+          {/* Free Trial */}
+          <Button
+            type="button"
+            className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-bold py-6 rounded-xl shadow-lg flex items-center justify-center gap-2 transform hover:scale-105 transition-transform duration-300"
+            onClick={() => signIn("guest")}
+          >
+            <Sparkles className="w-5 h-5" />
+            Try for Free! 🎉 No Login
+          </Button>
         </CardContent>
       </Card>
-      <div className="flex justify-center">
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full max-w-s bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-bold uppercase  shadow-lg transform hover:scale-105 transition-transform duration-300"
-        >
-          🚀 Try for Free! No Card / Sign Up Needed 🎉
-        </Button>
-      </div>
     </div>
   );
 }

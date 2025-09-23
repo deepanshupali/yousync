@@ -14,19 +14,20 @@ import {
 import { LuClapperboard } from "react-icons/lu";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+
 type JoinRoomProps = {
   roomType: "Join" | "Create";
 };
 
 const Room = ({ roomType }: JoinRoomProps) => {
   return (
-    <Card className="w-full max-w-md mx-auto mt-10 shadow-lg bg-[#ebecff] flex flex-col">
+    <Card className="w-full max-w-md mx-auto mt-10 shadow-lg bg-white dark:bg-neutral-900 flex flex-col border border-neutral-200 dark:border-neutral-800">
       <CardHeader className="flex flex-col items-center space-y-4">
         <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-400 shadow-lg">
           <LuClapperboard className="text-4xl text-white" />
         </div>
 
-        <CardTitle className="text-2xl font-semibold">
+        <CardTitle className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
           {roomType} Room
         </CardTitle>
       </CardHeader>
@@ -34,21 +35,33 @@ const Room = ({ roomType }: JoinRoomProps) => {
         {roomType === "Create" ? (
           <Input
             placeholder="Enter room name"
-            className="w-full bg-white  py-6 rounded-xl text-xl font-medium"
+            className="w-full bg-white dark:bg-neutral-800 py-6 rounded-xl text-xl font-medium text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400"
           />
         ) : (
           <InputOTP maxLength={4}>
             <InputOTPGroup className="flex justify-center mx-auto gap-4">
-              <InputOTPSlot index={0} className="bg-white p-6 rounded-md" />
-              <InputOTPSlot index={1} className="bg-white p-6 rounded-md" />
-              <InputOTPSlot index={2} className="bg-white p-6 rounded-md" />
-              <InputOTPSlot index={3} className="bg-white p-6 rounded-md" />
+              <InputOTPSlot
+                index={0}
+                className="bg-white dark:bg-neutral-800 p-6 rounded-md text-neutral-900 dark:text-neutral-100"
+              />
+              <InputOTPSlot
+                index={1}
+                className="bg-white dark:bg-neutral-800 p-6 rounded-md text-neutral-900 dark:text-neutral-100"
+              />
+              <InputOTPSlot
+                index={2}
+                className="bg-white dark:bg-neutral-800 p-6 rounded-md text-neutral-900 dark:text-neutral-100"
+              />
+              <InputOTPSlot
+                index={3}
+                className="bg-white dark:bg-neutral-800 p-6 rounded-md text-neutral-900 dark:text-neutral-100"
+              />
             </InputOTPGroup>
           </InputOTP>
         )}
       </CardContent>
       <CardFooter>
-        <Button className="w-full bg-blue-500 text-white text-xl font-semibold !p-6 rounded-xl hover:bg-blue-600 transition-colors ">
+        <Button className="w-full bg-blue-500 text-white text-xl font-semibold !p-6 rounded-xl hover:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
           Join Room
         </Button>
       </CardFooter>

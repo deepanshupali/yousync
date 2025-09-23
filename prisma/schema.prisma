@@ -15,22 +15,31 @@ datasource db {
   url      = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
+
 model User {
-  id            String    @id @default(cuid())
-  email         String?   @unique
+  id            String   @id @default(cuid())
   name          String?
-  image         String?   // 👈 instead of avatar
+  email         String?  @unique
+  provider      String?
+  image         String?
   emailVerified DateTime?
-  role          String?   @default("USER") // you can keep this
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  expiresAt     DateTime?   // ✅ for guest expiry tracking
+
+  memberships Membership[]
+  messages    Message[]
+  bans        Ban[]
+  rooms       Room[]        @relation("UserRooms")
+  accounts    Account[]
+  sessions    Session[]
 }
 
 
+
 model Account {
-  id                 String   @id @default(cuid())
+  id                 String  @id @default(cuid())
   userId             String
   type               String
   provider           String
@@ -42,7 +51,7 @@ model Account {
   scope              String?
   id_token           String?
   session_state      String?
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -63,3 +72,66 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+//
+// APP MODELS
+//
+model Room {
+  id        String       @id 
+  title     String
+  adminId   String       @unique   // one user can own only one room
+  admin     User         @relation("UserRooms", fields: [adminId], references: [id])
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  memberships Membership[]
+  messages    Message[]
+  videoState  VideoState?
+  bans        Ban[]
+}
+
+model Membership {
+  id       String   @id @default(cuid())
+  userId   String   @unique // one user can only be in one room at a time
+  roomId   String
+  role     String   @default("member") // admin/member
+  joinedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  room Room @relation(fields: [roomId], references: [id])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  text      String
+  roomId    String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model VideoState {
+  id        String   @id @default(cuid())
+  roomId    String   @unique
+  source    String
+  playing   Boolean  @default(false)
+  position  Float    @default(0)
+  updatedAt DateTime @updatedAt
+
+  room Room @relation(fields: [roomId], references: [id])
+}
+
+model Ban {
+  id        String   @id @default(cuid())
+  roomId    String
+  userId    String
+  reason    String?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([roomId, userId]) // one ban per user per room
+}

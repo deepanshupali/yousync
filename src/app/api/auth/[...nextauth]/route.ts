@@ -1,7 +1,16 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions, User } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import Credentials from "next-auth/providers/credentials";
+import App from "next/app";
+type AppUser = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  provider?: string;
+};
 
 const GOOGLE_CLIENT_ID = process.env.AUTH_GOOGLE_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.AUTH_GOOGLE_SECRET!;
@@ -9,22 +18,79 @@ const GOOGLE_CLIENT_SECRET = process.env.AUTH_GOOGLE_SECRET!;
 const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   secret: process.env.NEXTAUTH_SECRET,
-  session: {
-    strategy: "jwt",
-  },
+
   providers: [
     GoogleProvider({
       clientId: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
     }),
+    Credentials({
+      id: "guest",
+      name: "Guest",
+      credentials: {},
+      async authorize() {
+        const result = await prisma.user.deleteMany({
+          where: {
+            provider: "guest",
+            expiresAt: { lt: new Date() },
+          },
+        });
+
+        console.log(`🧹 Deleted ${result.count} expired guest users`);
+        console.log("Created guest user:");
+        async function createGuestUser() {
+          const guestUser = await prisma.user.create({
+            data: {
+              name: `Guest-${Math.floor(Math.random() * 10000)}`,
+              provider: "guest",
+              expiresAt: new Date(Date.now() + 45 * 60 * 1000), // 45 min
+            },
+          });
+
+          console.log("Created guest user:", guestUser);
+        }
+
+        createGuestUser();
+
+        const guestUser = await prisma.user.create({
+          data: {
+            name: `Guest-${Math.floor(Math.random() * 10000)}`,
+            provider: "guest",
+            expiresAt: new Date(Date.now() + 45 * 60 * 1000), // expires in 45 min
+          },
+        });
+        console.log("Created guest user:", guestUser);
+        return {
+          id: guestUser.id,
+          name: guestUser.name,
+          provider: "guest",
+        };
+      },
+    }),
   ],
+  session: {
+    strategy: "jwt",
+    maxAge: 60 * 45, // 45 minutes
+  },
   callbacks: {
     async redirect({ url, baseUrl }) {
       return `${baseUrl}/watchparty`; // 👈 Always redirect to watchparty
     },
-    async signIn({ profile }) {
-      console.log("Profile:", profile);
+    async signIn() {
       return true;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        const { id, provider } = user as AppUser;
+        token.id = id;
+        token.provider = provider ?? "google";
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      session.user.id = token.id as string; // ✅ put id back into session
+      session.user.provider = token.provider as string;
+      return session;
     },
   },
 };
