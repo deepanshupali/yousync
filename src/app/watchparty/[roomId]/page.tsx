@@ -1,15 +1,13 @@
 // app/watchparty/[roomId]/page.tsx
-import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { getRoom } from "./RoomData";
 
 export default async function RoomPage({
   params,
 }: {
   params: { roomId: string };
 }) {
-  const room = await prisma.room.findUnique({
-    where: { id: params.roomId },
-  });
+  const room = await getRoom(params.roomId);
 
   if (!room) return notFound();
 

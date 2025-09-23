@@ -44,11 +44,21 @@ export async function POST(req: Request) {
   }
 
   // create room
+  // create room + admin membership
   const room = await prisma.room.create({
     data: {
       id: roomId,
-      title: title || `Room ${roomId}`, // 👈 title from user or fallback
+      title: title || `Room ${roomId}`,
       adminId: userId,
+      memberships: {
+        create: {
+          userId,
+          role: "admin", // 👈 ensure admin is also in members list
+        },
+      },
+    },
+    include: {
+      memberships: true,
     },
   });
 
