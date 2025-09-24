@@ -1,6 +1,6 @@
-// app/watchparty/[roomId]/page.tsx
 import { notFound } from "next/navigation";
 import { getRoom } from "./RoomData";
+import RoomClient from "@/components/WatchParty/RoomClient";
 
 export default async function RoomPage({
   params,
@@ -11,10 +11,5 @@ export default async function RoomPage({
 
   if (!room) return notFound();
 
-  return (
-    <div className="flex items-center justify-center h-screen flex-col">
-      <h1 className="text-2xl font-bold">Welcome to Room: {room.id}</h1>
-      <p className="text-lg text-neutral-600">Room Name: {room.title}</p>
-    </div>
-  );
+  return <RoomClient room={room} />;
 }

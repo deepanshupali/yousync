@@ -29,6 +29,7 @@ const authOptions: NextAuthOptions = {
       name: "Guest",
       credentials: {},
       async authorize() {
+        console.log("Created guest user:");
         const result = await prisma.user.deleteMany({
           where: {
             provider: "guest",
@@ -38,19 +39,6 @@ const authOptions: NextAuthOptions = {
 
         console.log(`🧹 Deleted ${result.count} expired guest users`);
         console.log("Created guest user:");
-        async function createGuestUser() {
-          const guestUser = await prisma.user.create({
-            data: {
-              name: `Guest-${Math.floor(Math.random() * 10000)}`,
-              provider: "guest",
-              expiresAt: new Date(Date.now() + 45 * 60 * 1000), // 45 min
-            },
-          });
-
-          console.log("Created guest user:", guestUser);
-        }
-
-        createGuestUser();
 
         const guestUser = await prisma.user.create({
           data: {

@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       memberships: {
         create: {
           userId,
-          role: "admin", // 👈 ensure admin is also in members list
+          role: "admin", // admin role for room creator
         },
       },
     },
