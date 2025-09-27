@@ -1,15 +1,17 @@
+// app/watchparty/[roomId]/page.tsx
 import { notFound } from "next/navigation";
-import { getRoom } from "./RoomData";
+import { getRoomWithMembers } from "./RoomData";
 import RoomClient from "@/components/WatchParty/RoomClient";
 
 export default async function RoomPage({
   params,
 }: {
-  params: { roomId: string };
+  params: Promise<{ roomId: string }>;
 }) {
-  const room = await getRoom(params.roomId);
+  const { roomId } = await params;
+  const roomInfo = await getRoomWithMembers(roomId);
 
-  if (!room) return notFound();
+  if (!roomInfo) return notFound();
 
-  return <RoomClient room={room} />;
+  return <RoomClient roomInfo={roomInfo} />;
 }
