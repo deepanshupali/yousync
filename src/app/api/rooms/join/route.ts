@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { pusher } from "@/lib/pusher";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -29,13 +30,19 @@ export async function POST(req: Request) {
     );
   }
 
-  // Create membership
+  // Create membership with user info
   const membership = await prisma.membership.create({
     data: {
       userId: session.user.id,
       roomId,
       role: room.adminId === session.user.id ? "admin" : "member",
     },
+    include: { user: true }, // 👈 user info bhejna zaroori hai
+  });
+
+  // 🔥 Real-time event fire
+  await pusher.trigger(`room-${roomId}`, "member-joined", {
+    membership,
   });
 
   return NextResponse.json(membership);

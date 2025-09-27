@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { pusher } from "@/lib/pusher";
 
 export async function POST() {
   const session = await getServerSession(authOptions);
@@ -25,10 +26,17 @@ export async function POST() {
   if (room?.adminId === userId) {
     // Admin leaving → delete room (cascade will clean memberships/messages)
     await prisma.room.delete({ where: { id: room.id } });
+    await pusher.trigger(`room-${room.id}`, "room-deleted", {
+      message: "Room closed by admin",
+    });
     return NextResponse.json({ message: "Room deleted (admin left)" });
   }
 
   // Member leaving → just delete membership
   await prisma.membership.delete({ where: { userId } });
+  await pusher.trigger(`room-${room!.id}`, "member-left", {
+    userId,
+    message: "A member has left the room",
+  });
   return NextResponse.json({ message: "Left the room" });
 }
