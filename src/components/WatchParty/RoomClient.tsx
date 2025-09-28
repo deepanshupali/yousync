@@ -3,11 +3,16 @@
 import { useEffect, useState } from "react";
 import { pusherClient } from "@/lib/pusherClient";
 import { MembershipWithUser, RoomWithMembers } from "@custom-types/index";
+import CopyButton from "./Room/CopyBtn";
+import OnlineUsers from "./Room/RoomUser/OnlineUser";
+import ChatBox from "./Room/RoomUser/Chat";
 
 export default function RoomClient({
   roomInfo,
+  currentUserId,
 }: {
   roomInfo: RoomWithMembers;
+  currentUserId: string;
 }) {
   const [members, setMembers] = useState<MembershipWithUser[]>(
     roomInfo.memberships
@@ -15,6 +20,22 @@ export default function RoomClient({
 
   useEffect(() => {
     const channel = pusherClient.subscribe(`room-${roomInfo.id}`);
+
+    channel.bind(
+      "member-kicked",
+      (data: { userId: string; message: string }) => {
+        // Remove kicked user from members list for everyone
+        setMembers((prev) => prev.filter((m) => m.userId !== data.userId));
+
+        // Agar current user kick hua hai, tabhi redirect karo
+        if (data.userId === currentUserId) {
+          alert(data.message);
+          setTimeout(() => {
+            window.location.href = "/watchparty";
+          }, 500);
+        }
+      }
+    );
 
     // Admin deleted room
     channel.bind("room-deleted", (data: { message: string }) => {
@@ -38,7 +59,7 @@ export default function RoomClient({
     return () => {
       pusherClient.unsubscribe(`room-${roomInfo.id}`);
     };
-  }, [roomInfo.id]);
+  }, [roomInfo.id, currentUserId]);
 
   // Leave room button action
   async function leaveRoom() {
@@ -60,15 +81,15 @@ export default function RoomClient({
       <h1 className="text-2xl font-bold mb-4">
         Welcome to Room: {roomInfo.title}
       </h1>
+      <CopyButton text={roomInfo.id} />
 
       <h2 className="text-xl mt-4 mb-2">Members:</h2>
-      <ul className="list-disc list-inside mb-6">
-        {members.map((m) => (
-          <li key={m.id}>
-            {m.user.name ?? "Anonymous"} ({m.role})
-          </li>
-        ))}
-      </ul>
+      <OnlineUsers
+        members={members}
+        roomInfo={roomInfo}
+        currentUserId={currentUserId}
+      />
+      <ChatBox roomId={roomInfo.id} userId={currentUserId} />
 
       <button
         onClick={leaveRoom}

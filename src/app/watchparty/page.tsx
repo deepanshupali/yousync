@@ -8,6 +8,7 @@ import Rimage from "../../../public/illustration.png";
 import Image from "next/image";
 
 import LogoutButton from "@/components/LogoutBtn";
+import ActiveRoom from "@/components/WatchParty/ActiveRooms";
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
@@ -56,6 +57,7 @@ export default async function Dashboard() {
             <Room roomType="Join" />
             <Room roomType="Create" />
           </div>
+          <ActiveRoom />
         </div>
       </div>
     </main>

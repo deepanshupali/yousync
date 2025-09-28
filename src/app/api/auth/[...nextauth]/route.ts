@@ -29,7 +29,6 @@ const authOptions: NextAuthOptions = {
       name: "Guest",
       credentials: {},
       async authorize() {
-        console.log("Created guest user:");
         const result = await prisma.user.deleteMany({
           where: {
             provider: "guest",
@@ -38,7 +37,6 @@ const authOptions: NextAuthOptions = {
         });
 
         console.log(`🧹 Deleted ${result.count} expired guest users`);
-        console.log("Created guest user:");
 
         const guestUser = await prisma.user.create({
           data: {
@@ -64,8 +62,23 @@ const authOptions: NextAuthOptions = {
     async redirect({ url, baseUrl }) {
       return `${baseUrl}/watchparty`; // 👈 Always redirect to watchparty
     },
-    async signIn() {
-      return true;
+    async signIn({ user }) {
+      if (!user?.id) return true; // guest ya google user
+
+      // cleanup expired memberships for this user
+      const memberships = await prisma.membership.findMany({
+        where: { userId: user.id },
+      });
+      console.log("User memberships:", memberships);
+      const now = Date.now();
+      for (const m of memberships) {
+        const joinedAt = m.joinedAt.getTime();
+        if (now - joinedAt > 45 * 60 * 1000) {
+          await prisma.membership.delete({ where: { id: m.id } });
+        }
+      }
+
+      return true; // allow sign in
     },
     async jwt({ token, user }) {
       if (user) {
