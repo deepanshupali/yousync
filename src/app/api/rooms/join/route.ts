@@ -44,6 +44,7 @@ export async function POST(req: Request) {
   await pusher.trigger(`room-${roomId}`, "member-joined", {
     membership,
   });
+  console.log("Member joined event triggered");
 
   return NextResponse.json(membership);
 }

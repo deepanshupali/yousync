@@ -36,10 +36,11 @@ export async function POST(req: Request) {
   });
 
   // Realtime notify kicked user
-  await pusher.trigger(`room-${roomId}`, "member-kicked", {
+  const d = await pusher.trigger(`room-${roomId}`, "member-kicked", {
     userId,
     message: "You were removed by the admin",
   });
+  console.log("Member kicked event triggered", session.user.id);
 
   return NextResponse.json({ message: "User removed from room" });
 }

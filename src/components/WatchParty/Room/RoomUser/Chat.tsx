@@ -66,14 +66,18 @@ export default function ChatBox({
     }
 
     fetchMessages();
+    let channel = pusherClient.channel(`room-${roomId}`);
+    if (!channel) {
+      channel = pusherClient.subscribe(`room-${roomId}`);
+    }
 
-    const channel = pusherClient.subscribe(`room-${roomId}`);
+    // const channel = pusherClient.subscribe(`room-${roomId}`);
     channel.bind("message-new", (data: Message) => {
       setMessages((prev) => [...prev, data]);
     });
 
     return () => {
-      pusherClient.unsubscribe(`room-${roomId}`);
+      channel.unbind("message-new");
     };
   }, [roomId]);
 
@@ -85,7 +89,7 @@ export default function ChatBox({
   // Send message
   async function sendMessage() {
     if (!newMsg.trim()) return;
-
+    console.log("Sending message:", { roomId, userId, text: newMsg });
     await fetch("/api/msg", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -1,7 +1,8 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
-
+import { IoIosCopy } from "react-icons/io";
 type CopyButtonProps = {
   text: string; // The text to copy
   label?: string; // Optional label for the button
@@ -21,13 +22,18 @@ export default function CopyButton({ text, label = "Copy" }: CopyButtonProps) {
   }
 
   return (
-    <button
-      onClick={handleCopy}
-      className={`px-3 py-1 rounded text-white text-sm ${
-        copied ? "bg-green-500" : "bg-blue-500 hover:bg-blue-600"
-      }`}
-    >
-      {copied ? "Copied!" : label}
-    </button>
+    <div>
+      <span className="font-mono text-sm bg-muted px-2 py-1 rounded mr-2">
+        Room ID: <strong>{text}</strong>
+      </span>
+      <Button
+        onClick={handleCopy}
+        variant={copied ? "secondary" : "default"}
+        size="icon"
+        title={copied ? "Copied!" : "Copy Room ID"}
+      >
+        <IoIosCopy />
+      </Button>
+    </div>
   );
 }

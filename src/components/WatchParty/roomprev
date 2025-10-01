@@ -1,0 +1,285 @@
+// import { useEffect, useState } from "react";
+// import { IoIosArrowBack } from "react-icons/io";
+// import { FaUserFriends } from "react-icons/fa";
+// import { ImExit } from "react-icons/im";
+// import { pusherClient } from "@/lib/pusherClient";
+// import { MembershipWithUser, RoomWithMembers } from "@custom-types/index";
+// import CopyButton from "./Room/CopyBtn";
+// import OnlineUsers from "./Room/RoomUser/OnlineUser";
+// import ChatBox from "./Room/RoomUser/Chat";
+// import React from "react";
+// import ReactPlayer from "react-player";
+// import { Button } from "../ui/button";
+// import { Separator } from "@/components/ui/separator";
+
+//   const [members, setMembers] = useState<MembershipWithUser[]>(
+//     roomInfo.memberships
+//   );
+//   const [showChat, setShowChat] = useState(true);
+//   useEffect(() => {
+//     const channel = pusherClient.subscribe(`room-${roomInfo.id}`);
+
+//     const handleMemberJoined = (data: { membership: MembershipWithUser }) => {
+//       setMembers((prev) => [...prev, data.membership]);
+//       console.log("Member joined:", data.membership.user.name);
+//     };
+
+//     const handleMemberLeft = (data: { userId: string }) => {
+//       setMembers((prev) => prev.filter((m) => m.userId !== data.userId));
+//       console.log("Member left:", data.userId);
+//     };
+
+//     const handleMemberKicked = (data: { userId: string; message: string }) => {
+//       console.log("Kicked event received for:", data.userId);
+//       if (data.userId === currentUserId)
+//         setTimeout(() => (window.location.href = "/watchparty"), 500);
+//       setMembers((prev) => prev.filter((m) => m.userId !== data.userId));
+//       console.log("Member kicked:", data.userId);
+//       if (data.userId === currentUserId)
+//         setTimeout(() => (window.location.href = "/watchparty"), 500);
+//     };
+
+//     const handleRoomDeleted = (data: { message: string }) => {
+//       alert(data.message);
+//       window.location.href = "/watchparty";
+//     };
+
+//     channel.bind("member-joined", handleMemberJoined);
+//     channel.bind("member-left", handleMemberLeft);
+//     channel.bind("member-kicked", handleMemberKicked);
+//     channel.bind("room-deleted", handleRoomDeleted);
+
+//     return () => {
+//       // channel.unbind("member-joined", handleMemberJoined);
+//       // channel.unbind("member-left", handleMemberLeft);
+//       // channel.unbind("member-kicked", handleMemberKicked);
+//       // channel.unbind("room-deleted", handleRoomDeleted);
+//       pusherClient.unsubscribe(`room-${roomInfo.id}`);
+//     };
+//   }, [roomInfo.id]);
+//   // Leave room button action
+//   async function leaveRoom() {
+//     const res = await fetch("/api/rooms/leave", { method: "POST" });
+//     const data = await res.json();
+//     if (res.ok) {
+//       if (data.redirect) {
+//         window.location.href = data.redirect;
+//       } else {
+//         alert(data.message);
+//       }
+//     } else {
+//       alert(data.error || "Something went wrong");
+//     }
+//   }
+//   async function kickUser(userId: string) {
+//     await fetch("/api/rooms/kick", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ roomId: roomInfo.id, userId }),
+//     });
+//   }
+//   return (
+//     <div className="flex  md:flex-row h-screen border-amber-300 border-4">
+//       {/* // Left side: Video player and room info */}
+//       <div className="flex flex-col flex-[0.8]">
+//         <div className="flex items-center justify-between p-4 border-b border-amber-300">
+//           <div className="flex items-center space-x-4">
+//             <Button variant="secondary" size="icon" className="size-8">
+//               <IoIosArrowBack />
+//             </Button>
+
+//             <h1 className="text-2xl font-bold">Room: {roomInfo.title}</h1>
+//             <Button variant="secondary" className="">
+//               <FaUserFriends />
+//               <span className="ml-1">{members.length}</span>
+//             </Button>
+//           </div>
+
+//           <div className="flex items-center space-x-2">
+//             <CopyButton text={roomInfo.id} />
+//             <button
+//               onClick={() => setShowChat((prev) => !prev)}
+//               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+//             >
+//               {showChat ? "Hide Chat" : "Show Chat"}
+//             </button>
+//             <Button onClick={leaveRoom} variant="destructive">
+//               <ImExit /> Leave
+//             </Button>
+//           </div>
+//         </div>
+//         <div className="flex-1 bg-black flex items-center justify-center">
+//           <pre>{JSON.stringify(members, null, 2)}</pre>
+//           {/* <ReactPlayer
+//             src="https://www.youtube.com/watch?v=U7TfazPhdKE"
+//             controls
+//             width="100%"
+//             height="100%"
+//           /> */}
+//         </div>
+//       </div>
+//       {/* Right side: Chat and online users */}
+//       <div className="border-l border-amber-300 flex flex-col flex-[0.2] p-7 ">
+//         <div className="flex ">
+//           <Button
+//             onClick={() => setShowChat(() => true)}
+//             variant="ghost"
+//             className="rounded-none flex-1"
+//           >
+//             Messages
+//           </Button>
+
+//           <Button
+//             onClick={() => setShowChat(() => false)}
+//             variant="ghost"
+//             className="rounded-none flex-1"
+//           >
+//             Participants
+//           </Button>
+//         </div>
+//         <Separator className="my-4 border-1" />
+//         <div className="flex flex-col flex-[0.2]">
+//           {showChat ? (
+//             <ChatBox roomId={roomInfo.id} userId={currentUserId} />
+//           ) : (
+//             <OnlineUsers
+//               members={members}
+//               currentUserId={currentUserId}
+//               roomInfo={roomInfo}
+//               kickUser={kickUser}
+//             />
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+
+
+// new code
+"use client";
+
+import { useEffect, useState } from "react";
+import { pusherClient } from "@/lib/pusherClient";
+import { MembershipWithUser, RoomWithMembers } from "@custom-types/index";
+// import ChatBox from "@/components/WatchParty/ChatBox";
+
+export default function RoomClient({
+  roomInfo,
+  currentUserId,
+}: {
+  roomInfo: RoomWithMembers;
+  currentUserId: string;
+}) {
+  const [members, setMembers] = useState<MembershipWithUser[]>(
+    roomInfo.memberships
+  );
+
+  useEffect(() => {
+    const channel = pusherClient.subscribe(`room-${roomInfo.id}`);
+
+    // 👤 Member joined
+    channel.bind(
+      "member-joined",
+      (data: { membership: MembershipWithUser }) => {
+        setMembers((prev) => [...prev, data.membership]);
+      }
+    );
+
+    // 👋 Member left
+    channel.bind("member-left", (data: { userId: string }) => {
+      setMembers((prev) => prev.filter((m) => m.userId !== data.userId));
+    });
+
+    // ❌ Member kicked
+    channel.bind(
+      "member-kicked",
+      (data: { userId: string; message: string }) => {
+        if (data.userId === currentUserId) {
+          alert(data.message);
+          window.location.href = "/watchparty";
+        } else {
+          setMembers((prev) => prev.filter((m) => m.userId !== data.userId));
+        }
+      }
+    );
+
+    // 🗑️ Room deleted
+    channel.bind("room-deleted", (data: { message: string }) => {
+      alert(data.message);
+      window.location.href = "/watchparty";
+    });
+
+    return () => {
+      pusherClient.unsubscribe(`room-${roomInfo.id}`);
+    };
+  }, [roomInfo.id, currentUserId]);
+
+  // 👢 Kick member (admin only)
+  async function kickUser(userId: string) {
+    await fetch("/api/rooms/kick", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId: roomInfo.id, userId }),
+    });
+  }
+
+  // 🚪 Leave room
+  async function leaveRoom() {
+    const res = await fetch("/api/rooms/leave", { method: "POST" });
+    const data = await res.json();
+    if (res.ok) {
+      if (data.redirect) {
+        window.location.href = data.redirect;
+      } else {
+        alert(data.message);
+        window.location.href = "/watchparty";
+      }
+    } else {
+      alert(data.error || "Something went wrong");
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen gap-6 p-6">
+      <h1 className="text-2xl font-bold">Welcome to Room: {roomInfo.title}</h1>
+      <p className="text-neutral-500">Room ID: {roomInfo.id}</p>
+
+      {/* 👥 Members List */}
+      <div className="w-full max-w-md border rounded-md p-4">
+        <h2 className="text-xl font-semibold mb-2">Members</h2>
+        <ul className="space-y-2">
+          {members.map((m) => (
+            <li
+              key={m.id}
+              className="flex justify-between items-center p-2 bg-gray-100 dark:bg-gray-800 rounded"
+            >
+              <span>
+                {m.user.name ?? "Anonymous"} ({m.role})
+              </span>
+              {roomInfo.adminId === currentUserId &&
+                m.userId !== currentUserId && (
+                  <button
+                    onClick={() => kickUser(m.userId)}
+                    className="ml-4 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                  >
+                    Kick
+                  </button>
+                )}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* 💬 Chat */}
+      {/* <ChatBox roomId={roomInfo.id} userId={currentUserId} /> */}
+
+      {/* 🚪 Leave Room */}
+      <button
+        onClick={leaveRoom}
+        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+      >
+        Leave Room
+      </button>
+    </div>
+  );
+}

@@ -1,0 +1,133 @@
+// /* <div className="flex flex-col items-center justify-center h-screen">
+//       <h1 className="text-2xl font-bold mb-4">
+//         Welcome to Room: {roomInfo.title}
+//       </h1>
+//       <CopyButton text={roomInfo.id} />
+//       <ReactPlayer
+//         src={"https://www.youtube.com/watch?v=4G48_eotFfo"}
+//         controls={true}
+//       />
+
+//       <h2 className="text-xl mt-4 mb-2">Members:</h2>
+//       <OnlineUsers
+//         members={members}
+//         roomInfo={roomInfo}
+//         currentUserId={currentUserId}
+//       />
+//       <ChatBox roomId={roomInfo.id} userId={currentUserId} />
+
+//       <button
+//         onClick={leaveRoom}
+//         className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+//       >
+//         Leave Room
+//       </button>
+//     </div> */
+// }
+
+// <div className="flex flex-col items-center justify-center h-screen">
+//   <h1 className="text-2xl font-bold mb-4">
+//     Welcome to Room: {roomInfo.title}
+//   </h1>
+//   <CopyButton text={roomInfo.id} />
+//   <ReactPlayer
+//     src={"https://www.youtube.com/watch?v=4G48_eotFfo"}
+//     controls={true}
+//   />
+
+//   <h2 className="text-xl mt-4 mb-2">Members:</h2>
+//   <OnlineUsers
+//     members={members}
+//     roomInfo={roomInfo}
+//     currentUserId={currentUserId}
+//   />
+//   <ChatBox roomId={roomInfo.id} userId={currentUserId} />
+
+//   <button
+//     onClick={leaveRoom}
+//     className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+//   >
+//     Leave Room
+//   </button>
+// </div>
+
+//   <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 shadow-md border border-gray-200 dark:border-zinc-800">
+//        <h3 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+//          <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+//          Online Users
+//        </h3>
+//        <ul className="space-y-3">
+//          {members.map((m) => (
+//            <li
+//              key={m.id}
+//              className="flex items-center justify-between bg-zinc-100 dark:bg-zinc-800 rounded-lg px-4 py-3 shadow-sm transition hover:shadow-md"
+//            >
+//              <div className="flex items-center gap-3">
+//                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-green-400 to-blue-400 flex items-center justify-center text-white font-bold text-lg">
+//                  {m.user.name?.charAt(0).toUpperCase()}
+//                </div>
+//                <div>
+//                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+//                    {m.user.name}
+//                  </span>
+//                  <span className="ml-2 text-xs px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">
+//                    {m.role}
+//                  </span>
+//                  {m.userId === currentUserId && (
+//                    <span className="ml-2 text-green-600 dark:text-green-400 text-xs font-semibold">
+//                      You
+//                    </span>
+//                  )}
+//                </div>
+//              </div>
+//              {/* {roomInfo.adminId === currentUserId &&
+//                m.userId !== currentUserId && (
+//                  <Button
+//                    variant="destructive"
+//                    size="sm"
+//                    onClick={() => kickUser(m.userId)}
+//                    title={`Kick ${m.user.name}`}
+//                    className="transition hover:scale-105"
+//                  >
+//                    Kick
+//                  </Button>
+//                )} */}
+//              {roomInfo.adminId === currentUserId &&
+//                m.userId !== currentUserId && (
+//                  <AlertDialog>
+//                    <AlertDialogTrigger asChild>
+//                      <Button
+//                        variant="destructive"
+//                        size="sm"
+//                        title={`Kick ${m.user.name}`}
+//                        className="transition hover:scale-105"
+//                      >
+//                        Kick
+//                      </Button>
+//                    </AlertDialogTrigger>
+//                    <AlertDialogContent>
+//                      <AlertDialogHeader>
+//                        <AlertDialogTitle>Kick {m.user.name}?</AlertDialogTitle>
+//                        <AlertDialogDescription>
+//                          Are you sure you want to remove this user from the room?
+//                          This action cannot be undone.
+//                        </AlertDialogDescription>
+//                      </AlertDialogHeader>
+//                      <AlertDialogFooter>
+//                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+//                        <AlertDialogAction onClick={() => kickUser(m.userId)}>
+//                          Kick
+//                        </AlertDialogAction>
+//                      </AlertDialogFooter>
+//                    </AlertDialogContent>
+//                  </AlertDialog>
+//                )}
+//            </li>
+//          ))}
+//        </ul>
+//        {members.length === 0 && (
+//          <div className="text-zinc-400 dark:text-zinc-500 text-sm mt-4 text-center">
+//            No users online.
+//          </div>
+//        )}
+//      </div>
