@@ -31,6 +31,7 @@ export default function CopyButton({ text, label = "Copy" }: CopyButtonProps) {
         variant={copied ? "secondary" : "default"}
         size="icon"
         title={copied ? "Copied!" : "Copy Room ID"}
+        className="cursor-pointer"
       >
         <IoIosCopy />
       </Button>

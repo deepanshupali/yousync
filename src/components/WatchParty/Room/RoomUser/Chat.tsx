@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { pusherClient } from "@/lib/pusherClient";
 
 export interface User {
@@ -43,17 +44,14 @@ export default function ChatBox({
   const [newMsg, setNewMsg] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom function
   const scrollToBottom = () => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Load old messages + listen for realtime updates
   useEffect(() => {
     async function fetchMessages() {
       const res = await fetch(`/api/msg/${roomId}`);
       const data = await res.json();
-      console.log("Fetched messages:", data);
       setMessages(
         data.map((m: Message) => ({
           id: m.id,
@@ -61,17 +59,18 @@ export default function ChatBox({
           userId: m.userId,
           sender: m.user?.name ?? "Guest",
           createdAt: m.createdAt,
+          user: m.user,
         }))
       );
     }
 
     fetchMessages();
+
     let channel = pusherClient.channel(`room-${roomId}`);
     if (!channel) {
       channel = pusherClient.subscribe(`room-${roomId}`);
     }
 
-    // const channel = pusherClient.subscribe(`room-${roomId}`);
     channel.bind("message-new", (data: Message) => {
       setMessages((prev) => [...prev, data]);
     });
@@ -81,15 +80,12 @@ export default function ChatBox({
     };
   }, [roomId]);
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Send message
   async function sendMessage() {
     if (!newMsg.trim()) return;
-    console.log("Sending message:", { roomId, userId, text: newMsg });
     await fetch("/api/msg", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -99,31 +95,75 @@ export default function ChatBox({
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="font-bold text-lg">Live Chat</CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="h-60 p-4 space-y-2">
+    // <Card className="w-full max-w-md mx-auto h- flex flex-col">
+    <Card className="w-full h-full flex flex-col ">
+      <CardHeader className="font-bold text-lg border-b">Live Chat</CardHeader>
+      <CardContent className="flex-1 p-4">
+        <ScrollArea className="h-full pr-2 space-y-3">
           {messages.map((m) => {
+            const isMe = m.userId === userId;
             return (
-              <div key={m.id} className="p-2 text-white rounded-md">
-                <span className="font-semibold">
-                  {m.userId === userId ? "You" : m.sender}{" "}
-                </span>
-                {m.text}
+              <div
+                key={m.id}
+                className={`flex items-end gap-2 ${
+                  isMe ? "justify-end" : "justify-start"
+                }`}
+              >
+                {!isMe && (
+                  <Avatar className="h-8 w-8 m-1">
+                    <AvatarImage src={m.user?.image ?? ""} alt={m.sender} />
+                    <AvatarFallback>
+                      {m.sender.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                <div
+                  className={`max-w-xs px-3 py-2 rounded-2xl text-sm shadow mb-2 ${
+                    isMe
+                      ? "bg-blue-600 text-white rounded-br-none"
+                      : "bg-muted text-foreground rounded-bl-none"
+                  }`}
+                >
+                  {!isMe && (
+                    <span className="block text-xs text-muted-foreground mb-1">
+                      {m.sender}
+                    </span>
+                  )}
+                  <span>{m.text}</span>
+                  <span className="block text-[10px] text-muted-foreground mt-1 text-right">
+                    {new Date(m.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                {isMe && (
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={m.user?.image ?? ""} alt="You" />
+                    <AvatarFallback>YOU</AvatarFallback>
+                  </Avatar>
+                )}
               </div>
             );
           })}
-          <div ref={scrollRef} /> {/* 👈 Always scroll here */}
+          <div ref={scrollRef} />
         </ScrollArea>
       </CardContent>
-      <CardFooter className="flex gap-2">
+      <CardFooter className="flex gap-2 border-t p-2">
         <Input
           value={newMsg}
           onChange={(e) => setNewMsg(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1"
+          className="flex-1 rounded-full"
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
-        <Button onClick={sendMessage}>Send</Button>
+        <Button
+          onClick={sendMessage}
+          className="rounded-full px-6"
+          disabled={!newMsg.trim()}
+        >
+          Send
+        </Button>
       </CardFooter>
     </Card>
   );
