@@ -11,12 +11,10 @@ import { ImExit } from "react-icons/im";
 import { Separator } from "@/components/ui/separator";
 import OnlineUsers from "./Room/RoomUser/OnlineUser";
 import ChatBox from "./Room/RoomUser/Chat";
-import ReactPlayer from "react-player";
+
 import { BsYoutube } from "react-icons/bs";
 import { Input } from "../ui/input";
 import Player from "../Player/Player";
-
-// import ChatBox from "@/components/WatchParty/ChatBox";
 
 export default function RoomClient({
   roomInfo,
@@ -32,8 +30,22 @@ export default function RoomClient({
   const [youtubeLink, setYoutubeLink] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
 
-  const handleLoad = () => {
-    setVideoUrl(youtubeLink); // update player URL only when button is clicked
+  const handleLoad = async () => {
+    try {
+      const res = await fetch("/api/video/load", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId: roomInfo.id, videoUrl: youtubeLink }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Something went wrong");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load video");
+    }
   };
   useEffect(() => {
     const channel = pusherClient.subscribe(`room-${roomInfo.id}`);
@@ -69,11 +81,30 @@ export default function RoomClient({
       alert(data.message);
       window.location.href = "/watchparty";
     });
+    // 📺 Listen for video load
+    channel.bind("video-loaded", (data: { videoUrl: string }) => {
+      setVideoUrl(data.videoUrl);
+    });
 
     return () => {
       pusherClient.unsubscribe(`room-${roomInfo.id}`);
     };
   }, [roomInfo.id, currentUserId]);
+  useEffect(() => {
+    async function fetchVideoState() {
+      try {
+        const res = await fetch(`/api/video/state?roomId=${roomInfo.id}`);
+        const data = await res.json();
+        if (res.ok && data.videoUrl) {
+          setVideoUrl(data.videoUrl);
+        }
+      } catch (err) {
+        console.error("Failed to fetch video state:", err);
+      }
+    }
+
+    fetchVideoState();
+  }, [roomInfo.id]);
 
   // 👢 Kick member (admin only)
   async function kickUser(userId: string) {
@@ -125,22 +156,24 @@ export default function RoomClient({
             </Button>
           </div>
           {/* YouTube Link Input */}
-          <div className="relative flex items-center w-1/3">
-            <BsYoutube
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-600"
-              size={20}
-            />
-            <Input
-              value={youtubeLink}
-              onChange={(e) => setYoutubeLink(e.target.value)}
-              type="text"
-              placeholder="Enter Youtube link"
-              className="pl-10" // add padding so text doesn't overlap icon
-            />
-            <Button onClick={handleLoad} className="ml-2">
-              Load
-            </Button>
-          </div>
+          {roomInfo.adminId === currentUserId && (
+            <div className="relative flex items-center w-1/3">
+              <BsYoutube
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-600"
+                size={20}
+              />
+              <Input
+                value={youtubeLink}
+                onChange={(e) => setYoutubeLink(e.target.value)}
+                type="text"
+                placeholder="Enter Youtube link"
+                className="pl-10" // add padding so text doesn't overlap icon
+              />
+              <Button onClick={handleLoad} className="ml-2">
+                Load
+              </Button>
+            </div>
+          )}
 
           <div className="flex items-center space-x-2">
             <CopyButton text={roomInfo.id} />
@@ -161,53 +194,6 @@ export default function RoomClient({
           {videoUrl ? (
             <Player videoUrl={videoUrl} />
           ) : (
-            // <div
-            //   style={{ position: "relative", width: "100%", height: "100%" }}
-            // >
-            //   <Player videoUrl={videoUrl} />
-            //   <div
-            //     style={{
-            //       position: "absolute",
-            //       top: 0,
-            //       left: 0,
-            //       width: "100%",
-            //       height: "100%",
-            //       background: "transparent",
-            //       zIndex: 2,
-            //     }}
-            //     tabIndex={-1} // prevent focus
-            //   />
-            // </div>
-            // <div
-            //   style={{ position: "relative", width: "100%", height: "100%" }}
-            // >
-            //   <ReactPlayer
-            //     src={videoUrl}
-            //     controls={false}
-            //     width="100%"
-            //     height="100%"
-            //     config={{
-            //       youtube: {
-            //         disablekb: 1,
-            //         enablejsapi: 1,
-            //         modestbranding: 1,
-            //         rel: 0,
-            //       },
-            //     }}
-            //   />
-            //   <div
-            //     style={{
-            //       position: "absolute",
-            //       top: 0,
-            //       left: 0,
-            //       width: "100%",
-            //       height: "100%",
-            //       background: "transparent",
-            //       zIndex: 2,
-            //     }}
-            //     tabIndex={-1} // prevent focus
-            //   />
-            // </div>
             <div className="text-white text-center">
               <h2 className="text-3xl mb-4">No video loaded</h2>
               <p className="text-lg">
