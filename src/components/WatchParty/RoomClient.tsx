@@ -26,9 +26,17 @@ export default function RoomClient({
   const [members, setMembers] = useState<MembershipWithUser[]>(
     roomInfo.memberships
   );
+  const [isAdmin] = useState(roomInfo.adminId === currentUserId);
   const [showChat, setShowChat] = useState(true);
   const [youtubeLink, setYoutubeLink] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [videoState, setVideoState] = useState<{
+    playing: boolean;
+    position: number;
+  }>({
+    playing: false,
+    position: 0,
+  });
 
   const handleLoad = async () => {
     try {
@@ -85,6 +93,13 @@ export default function RoomClient({
     channel.bind("video-loaded", (data: { videoUrl: string }) => {
       setVideoUrl(data.videoUrl);
     });
+    // when play/pause/seek is updated
+    channel.bind(
+      "video-state-updated",
+      (data: { playing: boolean; position: number }) => {
+        setVideoState({ playing: data.playing, position: data.position });
+      }
+    );
 
     return () => {
       pusherClient.unsubscribe(`room-${roomInfo.id}`);
@@ -192,7 +207,13 @@ export default function RoomClient({
         p-20"
         >
           {videoUrl ? (
-            <Player videoUrl={videoUrl} />
+            <Player
+              videoUrl={videoUrl}
+              roomId={roomInfo.id}
+              isAdmin={isAdmin}
+              playing={videoState.playing}
+              position={videoState.position}
+            />
           ) : (
             <div className="text-white text-center">
               <h2 className="text-3xl mb-4">No video loaded</h2>
@@ -237,12 +258,6 @@ export default function RoomClient({
               kickUser={kickUser}
             />
           )}
-          {/* <OnlineUsers
-            members={members}
-            currentUserId={currentUserId}
-            roomInfo={roomInfo}
-            kickUser={kickUser}
-          /> */}
         </div>
       </div>
     </div>
