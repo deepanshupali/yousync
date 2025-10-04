@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     // Upsert (create or update) video state for this room
     const updatedState = await prisma.videoState.upsert({
       where: { roomId },
-      update: { source: videoUrl },
+      update: { source: videoUrl, playing: false, position: 0 },
       create: {
         roomId,
         source: videoUrl,
@@ -26,12 +26,16 @@ export async function POST(req: Request) {
       },
     });
 
+    // if (updatedState.source === videoUrl) {
+    //   return NextResponse.json({ success: true, state: updatedState });
+    // }
+
     // 🔔 Notify others in the room via Pusher
     await pusher.trigger(`room-${roomId}`, "video-loaded", {
       videoUrl,
     });
 
-    return NextResponse.json({ success: true, videoUrl: updatedState.source });
+    return NextResponse.json({ success: true, videoUrl: updatedState });
   } catch (error) {
     console.error("Error loading video:", error);
     return NextResponse.json(

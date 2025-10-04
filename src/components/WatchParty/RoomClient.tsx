@@ -15,7 +15,7 @@ import ChatBox from "./Room/RoomUser/Chat";
 import { BsYoutube } from "react-icons/bs";
 import { Input } from "../ui/input";
 import Player from "../Player/Player";
-
+console.log("RoomClient file loaded");
 export default function RoomClient({
   roomInfo,
   currentUserId,
@@ -30,6 +30,7 @@ export default function RoomClient({
   const [showChat, setShowChat] = useState(true);
   const [youtubeLink, setYoutubeLink] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+
   const [videoState, setVideoState] = useState<{
     playing: boolean;
     position: number;
@@ -37,6 +38,18 @@ export default function RoomClient({
     playing: false,
     position: 0,
   });
+  // useEffect(() => {
+  //   console.log("timeout:", roomInfo.id);
+  //   fetch("/api/video/request-state", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({ roomId: roomInfo.id }),
+  //   });
+
+  //   return () => {
+  //     console.log("RoomClient unmounted");
+  //   };
+  // }, [isReady, roomInfo.id]);
 
   const handleLoad = async () => {
     try {
@@ -97,6 +110,7 @@ export default function RoomClient({
     channel.bind(
       "video-state-updated",
       (data: { playing: boolean; position: number }) => {
+        console.log("video-state-updated event:", data);
         setVideoState({ playing: data.playing, position: data.position });
       }
     );
@@ -105,13 +119,22 @@ export default function RoomClient({
       pusherClient.unsubscribe(`room-${roomInfo.id}`);
     };
   }, [roomInfo.id, currentUserId]);
+
+  // on reload, fetch current video state
   useEffect(() => {
+    console.log("reloaded");
     async function fetchVideoState() {
       try {
         const res = await fetch(`/api/video/state?roomId=${roomInfo.id}`);
         const data = await res.json();
+        console.log(
+          "playing, position from fetchVideoState:",
+          data.playing,
+          data.position
+        );
         if (res.ok && data.videoUrl) {
           setVideoUrl(data.videoUrl);
+          setVideoState({ playing: data.playing, position: data.position });
         }
       } catch (err) {
         console.error("Failed to fetch video state:", err);
@@ -222,8 +245,6 @@ export default function RoomClient({
               </p>
             </div>
           )}
-          {/* Overlay to block clicks */}
-          {/* <div className="absolute inset-0 bg-transparent cursor-not-allowed"></div> */}
         </div>
       </div>
       {/* right side */}
