@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { pusherClient } from "@/lib/pusherClient";
-import { channel } from "diagnostics_channel";
-import React, { use, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import YouTube, { YouTubeProps } from "react-youtube";
 
 export default function Player({
@@ -23,13 +21,6 @@ export default function Player({
   const containerRef = useRef<HTMLDivElement>(null); // ✅ wrapper for fullscreen
   const [isReady, setIsReady] = useState(false);
   const hasInitialized = useRef(false);
-
-  // const onReady: YouTubeProps["onReady"] = (event) => {
-  //   console.log("Player ready, setting ref");
-  //   playerRef.current = event.target;
-  //   if (!isAdmin) event.target.mute();
-  //   setIsReady(true);
-  // };
 
   function getVideoId(url: string): string | null {
     if (!url) return null; // ✅ prevents empty string crash
@@ -70,43 +61,6 @@ export default function Player({
       console.warn("⚠️ Failed to get iframe:", err);
     }
   };
-  // useEffect(() => {
-  //   const handleVisibilityChange = async () => {
-  //     if (!playerRef.current || !isReady) return;
-
-  //     if (document.visibilityState === "visible") {
-  //       console.log("🟢 Tab visible again — fetching latest video state");
-
-  //       try {
-  //         // Fetch latest position and play state from backend
-  //         const res = await fetch(`/api/video/state?roomId=${roomId}`);
-  //         const data = await res.json();
-
-  //         if (res.ok && data) {
-  //           const player = playerRef.current;
-  //           player.seekTo(data.position, true);
-
-  //           if (data.playing) {
-  //             player.playVideo();
-  //           } else {
-  //             player.pauseVideo();
-  //           }
-
-  //           if (!isAdmin) player.mute();
-  //         }
-  //       } catch (err) {
-  //         console.warn("Failed to refresh video state:", err);
-  //       }
-  //     } else {
-  //       console.log("🔴 Tab hidden — pausing locally");
-  //       playerRef.current.pauseVideo();
-  //     }
-  //   };
-
-  //   document.addEventListener("visibilitychange", handleVisibilityChange);
-  //   return () =>
-  //     document.removeEventListener("visibilitychange", handleVisibilityChange);
-  // }, [isReady, roomId, isAdmin]);
 
   useEffect(() => {
     if (!isReady || !playerRef.current) return;
@@ -194,32 +148,6 @@ export default function Player({
       }),
     });
   };
-  // useEffect(() => {
-  //   let channel = pusherClient.channel(`room-${roomId}`);
-  //   if (isAdmin) {
-  //     if (!channel) {
-  //       channel = pusherClient.subscribe(`room-${roomId}`);
-  //     }
-  //     channel.bind("request-video-state", () => {
-  //       console.log("Received request for video state", playerRef);
-  //       updateState(playing, playerRef.current?.getCurrentTime());
-  //     });
-  //   }
-  //   return () => {
-  //     if (isAdmin) {
-  //       channel.unbind("request-video-state");
-  //     }
-  //     try {
-  //       if (playerRef.current) {
-  //         playerRef.current.destroy();
-  //       }
-  //     } catch (e) {
-  //       console.warn("Player cleanup failed", e);
-  //     }
-  //   };
-  // }, [roomId, isAdmin]);
-
-  // 🔄 Update DB & Pusher (admin only)
 
   const opts: YouTubeProps["opts"] = {
     width: "100%",
@@ -231,10 +159,6 @@ export default function Player({
       disablekb: isAdmin ? 0 : 1, // block keyboard shortcuts for members
     },
   };
-
-  // const onReady: YouTubeProps["onReady"] = (event) => {
-  //   playerRef.current = event.target;
-  // };
 
   const onStateChange: YouTubeProps["onStateChange"] = (event) => {
     if (!playerRef.current) return;
@@ -282,13 +206,6 @@ export default function Player({
       }
     }
   };
-  // if (!videoUrl || !getVideoId(videoUrl)) {
-  //   return (
-  //     <div className="flex items-center justify-center w-full h-full bg-black text-white">
-  //       <p>No video loaded</p>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div ref={containerRef} className="relative w-full h-full bg-black">
