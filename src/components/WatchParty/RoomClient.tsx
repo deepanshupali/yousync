@@ -11,11 +11,11 @@ import { ImExit } from "react-icons/im";
 import { Separator } from "@/components/ui/separator";
 import OnlineUsers from "./Room/RoomUser/OnlineUser";
 import ChatBox from "./Room/RoomUser/Chat";
-
 import { BsYoutube } from "react-icons/bs";
 import { Input } from "../ui/input";
 import Player from "../Player/Player";
-console.log("RoomClient file loaded");
+import { ClipLoader } from "react-spinners";
+
 export default function RoomClient({
   roomInfo,
   currentUserId,
@@ -30,61 +30,42 @@ export default function RoomClient({
   const [showChat, setShowChat] = useState(true);
   const [youtubeLink, setYoutubeLink] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
 
-  const [videoState, setVideoState] = useState<{
-    playing: boolean;
-    position: number;
-  }>({
+  const [videoState, setVideoState] = useState({
     playing: false,
     position: 0,
   });
-  // useEffect(() => {
-  //   console.log("timeout:", roomInfo.id);
-  //   fetch("/api/video/request-state", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ roomId: roomInfo.id }),
-  //   });
-
-  //   return () => {
-  //     console.log("RoomClient unmounted");
-  //   };
-  // }, [isReady, roomInfo.id]);
 
   const handleLoad = async () => {
+    if (!youtubeLink.trim() || isLoadingVideo) return;
+    setIsLoadingVideo(true);
     try {
       const res = await fetch("/api/video/load", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roomId: roomInfo.id, videoUrl: youtubeLink }),
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || "Something went wrong");
-      }
+      if (!res.ok) alert(data.error || "Something went wrong");
     } catch (err) {
       console.error(err);
       alert("Failed to load video");
+    } finally {
+      setIsLoadingVideo(false);
     }
   };
+
   useEffect(() => {
     const channel = pusherClient.subscribe(`room-${roomInfo.id}`);
 
-    // 👤 Member joined
-    channel.bind(
-      "member-joined",
-      (data: { membership: MembershipWithUser }) => {
-        setMembers((prev) => [...prev, data.membership]);
-      }
+    channel.bind("member-joined", (data: { membership: MembershipWithUser }) =>
+      setMembers((prev) => [...prev, data.membership])
     );
-
-    // 👋 Member left
-    channel.bind("member-left", (data: { userId: string }) => {
-      setMembers((prev) => prev.filter((m) => m.userId !== data.userId));
-    });
-
-    // ❌ Member kicked
+    channel.bind("member-left", (data: { userId: string }) =>
+      setMembers((prev) => prev.filter((m) => m.userId !== data.userId))
+    );
     channel.bind(
       "member-kicked",
       (data: { userId: string; message: string }) => {
@@ -96,42 +77,27 @@ export default function RoomClient({
         }
       }
     );
-
-    // 🗑️ Room deleted
     channel.bind("room-deleted", (data: { message: string }) => {
       alert(data.message);
       window.location.href = "/watchparty";
     });
-    // 📺 Listen for video load
-    channel.bind("video-loaded", (data: { videoUrl: string }) => {
-      setVideoUrl(data.videoUrl);
-    });
-    // when play/pause/seek is updated
+    channel.bind("video-loaded", (data: { videoUrl: string }) =>
+      setVideoUrl(data.videoUrl)
+    );
     channel.bind(
       "video-state-updated",
-      (data: { playing: boolean; position: number }) => {
-        console.log("video-state-updated event:", data);
-        setVideoState({ playing: data.playing, position: data.position });
-      }
+      (data: { playing: boolean; position: number }) =>
+        setVideoState({ playing: data.playing, position: data.position })
     );
 
-    return () => {
-      pusherClient.unsubscribe(`room-${roomInfo.id}`);
-    };
+    return () => pusherClient.unsubscribe(`room-${roomInfo.id}`);
   }, [roomInfo.id, currentUserId]);
 
-  // on reload, fetch current video state
   useEffect(() => {
-    console.log("reloaded");
     async function fetchVideoState() {
       try {
         const res = await fetch(`/api/video/state?roomId=${roomInfo.id}`);
         const data = await res.json();
-        console.log(
-          "playing, position from fetchVideoState:",
-          data.playing,
-          data.position
-        );
         if (res.ok && data.videoUrl) {
           setVideoUrl(data.videoUrl);
           setVideoState({ playing: data.playing, position: data.position });
@@ -140,11 +106,9 @@ export default function RoomClient({
         console.error("Failed to fetch video state:", err);
       }
     }
-
     fetchVideoState();
   }, [roomInfo.id]);
 
-  // 👢 Kick member (admin only)
   async function kickUser(userId: string) {
     await fetch("/api/rooms/kick", {
       method: "POST",
@@ -153,82 +117,107 @@ export default function RoomClient({
     });
   }
 
-  // 🚪 Leave room
   async function leaveRoom() {
-    const res = await fetch("/api/rooms/leave", { method: "POST" });
-    const data = await res.json();
-    if (res.ok) {
-      if (data.redirect) {
-        window.location.href = data.redirect;
+    if (isLeaving) return;
+    setIsLeaving(true);
+    try {
+      const res = await fetch("/api/rooms/leave", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        window.location.href = data.redirect || "/watchparty";
       } else {
-        alert(data.message);
-        window.location.href = "/watchparty";
+        alert(data.error || "Something went wrong");
       }
-    } else {
-      alert(data.error || "Something went wrong");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to leave room");
+    } finally {
+      setIsLeaving(false);
     }
   }
-  function navtowatchparty() {
+
+  function navToWatchParty() {
     window.location.href = "/watchparty";
   }
 
   return (
-    <div className="flex  md:flex-row h-screen  border-amber-300 border-4">
-      {/* // Left side: Video player and room info */}
-      <div className="flex flex-col flex-[0.8]">
-        <div className="flex items-center justify-between p-4 border-b border-amber-300">
-          <div className="flex items-center space-x-4">
+    <div className="flex flex-col md:flex-row h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors">
+      {/* Left: Video and header */}
+      <div className="flex flex-col flex-[0.8] border-b md:border-b-0 md:border-r border-neutral-200 dark:border-neutral-800">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
             <Button
-              onClick={navtowatchparty}
-              variant="secondary"
+              onClick={navToWatchParty}
+              variant="ghost"
               size="icon"
-              className="size-8 cursor-pointer"
+              className="rounded-lg"
             >
-              <IoIosArrowBack />
+              <IoIosArrowBack className="text-xl" />
             </Button>
-
-            <h1 className="text-2xl font-bold">Room: {roomInfo.title}</h1>
-            <Button variant="secondary" className="cursor-pointer">
+            <h1 className="text-xl font-bold">Room: {roomInfo.title}</h1>
+            <Button
+              variant="outline"
+              className="flex items-center gap-1 text-sm"
+            >
               <FaUserFriends />
-              <span className="ml-1">{members.length}</span>
+              <span>{members.length}</span>
             </Button>
           </div>
-          {/* YouTube Link Input */}
-          {roomInfo.adminId === currentUserId && (
-            <div className="relative flex items-center w-1/3">
-              <BsYoutube
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-600"
-                size={20}
-              />
-              <Input
-                value={youtubeLink}
-                onChange={(e) => setYoutubeLink(e.target.value)}
-                type="text"
-                placeholder="Enter Youtube link"
-                className="pl-10" // add padding so text doesn't overlap icon
-              />
-              <Button onClick={handleLoad} className="ml-2">
-                Load
+
+          {isAdmin && (
+            <div className="flex items-center gap-2 w-full sm:w-1/2 lg:w-1/3 mt-3 sm:mt-0">
+              <div className="relative flex-grow">
+                <BsYoutube className="absolute left-3 top-1/2 -translate-y-1/2 text-red-600" />
+                <Input
+                  value={youtubeLink}
+                  onChange={(e) => setYoutubeLink(e.target.value)}
+                  placeholder="YouTube link"
+                  className="   pl-10 pr-3"
+                />
+              </div>
+              <Button
+                onClick={handleLoad}
+                disabled={isLoadingVideo}
+                className="flex items-center gap-2 whitespace-nowrap"
+              >
+                {isLoadingVideo ? (
+                  <>
+                    <ClipLoader size={18} color="#fff" />
+                    Loading
+                  </>
+                ) : (
+                  "Load"
+                )}
               </Button>
             </div>
           )}
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2 mt-3 sm:mt-0">
             <CopyButton text={roomInfo.id} />
-
             <Button
               onClick={leaveRoom}
               variant="destructive"
-              className="cursor-pointer"
+              disabled={isLeaving}
+              className="flex items-center gap-2"
             >
-              <ImExit /> Leave
+              {isLeaving ? (
+                <>
+                  <ClipLoader size={18} color="#fff" />
+                  Leaving...
+                </>
+              ) : (
+                <>
+                  <ImExit />
+                  Leave
+                </>
+              )}
             </Button>
           </div>
         </div>
-        <div
-          className="flex-1 bg-black flex items-center justify-center
-        p-20"
-        >
+
+        {/* Player */}
+        <div className="flex-1 bg-black flex items-center justify-center p-6 md:p-10">
           {videoUrl ? (
             <Player
               videoUrl={videoUrl}
@@ -238,37 +227,36 @@ export default function RoomClient({
               position={videoState.position}
             />
           ) : (
-            <div className="text-white text-center">
-              <h2 className="text-3xl mb-4">No video loaded</h2>
-              <p className="text-lg">
-                Please enter a YouTube link to start watching.
+            <div className="text-white text-center space-y-3">
+              <h2 className="text-2xl font-semibold">No video loaded</h2>
+              <p className="text-base opacity-80">
+                Enter a YouTube link to start your watch party.
               </p>
             </div>
           )}
         </div>
       </div>
-      {/* right side */}
-      {/* Right side: Chat and online users */}
-      <div className="border-l border-amber-300 flex flex-col flex-[0.2] ">
-        <div className="flex pt-3 pb-3 px-4 justify-around">
+
+      {/* Right: Chat / Users */}
+      <div className="flex flex-col flex-[0.2] bg-white/70 dark:bg-neutral-900/70 backdrop-blur-sm border-t md:border-t-0 md:border-l border-neutral-200 dark:border-neutral-800">
+        <div className="flex">
           <Button
-            onClick={() => setShowChat(() => true)}
-            variant="ghost"
-            className="rounded-none flex-1"
+            onClick={() => setShowChat(true)}
+            variant={showChat ? "secondary" : "ghost"}
+            className="flex-1 rounded-none"
           >
             Messages
           </Button>
-
           <Button
-            onClick={() => setShowChat(() => false)}
-            variant="ghost"
-            className="rounded-none flex-1"
+            onClick={() => setShowChat(false)}
+            variant={!showChat ? "secondary" : "ghost"}
+            className="flex-1 rounded-none"
           >
             Participants
           </Button>
         </div>
-        <Separator className="my-4 border-1 mt-0" />
-        <div className="flex-1 flex flex-col px-4 pb-4">
+        <Separator className="my-0" />
+        <div className="flex-1 flex flex-col px-3 py-3 overflow-y-auto">
           {showChat ? (
             <ChatBox roomId={roomInfo.id} userId={currentUserId} />
           ) : (
