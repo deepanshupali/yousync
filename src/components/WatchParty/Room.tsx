@@ -16,6 +16,7 @@ import { LuClapperboard } from "react-icons/lu";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
+import { ClipLoader } from "react-spinners";
 
 type JoinRoomProps = {
   roomType: "Join" | "Create";
@@ -24,54 +25,36 @@ type JoinRoomProps = {
 const Room = ({ roomType }: JoinRoomProps) => {
   const [roomName, setRoomName] = React.useState("");
   const [roomId, setRoomId] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
   const router = useRouter();
-  // async function handleClick() {
-  //   if (roomType === "Create") {
-  //     // Call create room API
-  //     const res = await fetch("/api/rooms", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ title: roomName }), // 👈 send to API
-  //     });
-  //     const data = await res.json();
 
-  //     if (res.ok) {
-  //       router.push(`/watchparty/${data.id}`); // 👈 redirect to new room
-  //     } else {
-  //       alert(data.error || "Failed to create room");
-  //     }
-  //   } else {
-  //     // For join, abhi placeholder rakho
-  //     const res = await fetch("/api/rooms/join", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ roomId }), // 👈 send to API
-  //     });
-  //     const data = await res.json();
-  //     if (res.ok) {
-  //       router.push(`/watchparty/${data.roomId}`); // 👈 redirect to new room
-  //     } else {
-  //       alert(data.error || "Failed to create room");
-  //     }
-  //   }
-  // }
   async function handleClick() {
+    if (loading) return; // prevent double clicks
+    setLoading(true);
+
     const isCreate = roomType === "Create";
     const endpoint = isCreate ? "/api/rooms" : "/api/rooms/join";
     const payload = isCreate ? { title: roomName } : { roomId };
 
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
-      router.push(`/watchparty/${isCreate ? data.id : data.roomId}`);
-    } else {
-      alert(data.error || "Something went wrong");
+      if (res.ok) {
+        router.push(`/watchparty/${isCreate ? data.id : data.roomId}`);
+      } else {
+        alert(data.error || "Something went wrong");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error or server not responding");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -86,6 +69,7 @@ const Room = ({ roomType }: JoinRoomProps) => {
           {roomType} Room
         </CardTitle>
       </CardHeader>
+
       <CardContent>
         {roomType === "Create" ? (
           <Input
@@ -97,32 +81,32 @@ const Room = ({ roomType }: JoinRoomProps) => {
         ) : (
           <InputOTP maxLength={4} value={roomId} onChange={(e) => setRoomId(e)}>
             <InputOTPGroup className="flex justify-center mx-auto gap-4">
-              <InputOTPSlot
-                index={0}
-                className="bg-white dark:bg-neutral-800 p-6 rounded-md text-neutral-900 dark:text-neutral-100"
-              />
-              <InputOTPSlot
-                index={1}
-                className="bg-white dark:bg-neutral-800 p-6 rounded-md text-neutral-900 dark:text-neutral-100"
-              />
-              <InputOTPSlot
-                index={2}
-                className="bg-white dark:bg-neutral-800 p-6 rounded-md text-neutral-900 dark:text-neutral-100"
-              />
-              <InputOTPSlot
-                index={3}
-                className="bg-white dark:bg-neutral-800 p-6 rounded-md text-neutral-900 dark:text-neutral-100"
-              />
+              {[0, 1, 2, 3].map((i) => (
+                <InputOTPSlot
+                  key={i}
+                  index={i}
+                  className="bg-white dark:bg-neutral-800 p-6 rounded-md text-neutral-900 dark:text-neutral-100"
+                />
+              ))}
             </InputOTPGroup>
           </InputOTP>
         )}
       </CardContent>
+
       <CardFooter>
         <Button
-          className="w-full bg-blue-500 text-white text-xl font-semibold !p-6 rounded-xl hover:bg-blue-600 dark:hover:bg-blue-500 transition-colors"
+          className="w-full bg-blue-500 text-white text-xl font-semibold !p-6 rounded-xl hover:bg-blue-600 dark:hover:bg-blue-500 transition-colors flex items-center justify-center gap-2 cursor-pointer"
           onClick={handleClick}
+          disabled={loading}
         >
-          {roomType} Room
+          {loading ? (
+            <>
+              <ClipLoader color="#ffffff" size={24} />
+              <span>Processing...</span>
+            </>
+          ) : (
+            `${roomType} Room`
+          )}
         </Button>
       </CardFooter>
     </Card>
