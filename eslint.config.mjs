@@ -20,6 +20,9 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    ignorePatterns: ["src/generated/prisma/*"],
+  },
 ];
 
 export default eslintConfig;
