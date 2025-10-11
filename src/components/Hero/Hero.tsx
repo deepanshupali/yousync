@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+
 import { FcGoogle } from "react-icons/fc";
 import { Sparkles } from "lucide-react";
 import { Button } from "../ui/button";
