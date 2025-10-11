@@ -26,9 +26,14 @@ const Nav = () => {
       {/* Right side actions */}
       <div className="flex items-center gap-3 md:gap-4">
         <ThemeToggleButton />
-
+        <Link
+          href="/about"
+          className="hidden sm:flex items-center gap-2 bg-white border border-neutral-300 dark:bg-neutral-800 dark:border-neutral-700 px-4 py-2 rounded-xl text-sm md:text-base font-medium hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-all shadow-sm"
+        >
+          About Us
+        </Link>
         {/* Login button group */}
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <Link
             href="/login"
             className="hidden sm:flex items-center gap-2 bg-white border border-neutral-300 dark:bg-neutral-800 dark:border-neutral-700 px-4 py-2 rounded-xl text-sm md:text-base font-medium hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-all shadow-sm"
@@ -43,7 +48,7 @@ const Nav = () => {
               Try Free
             </Button>
           </Link>
-        </div>
+        </div> */}
       </div>
     </nav>
   );

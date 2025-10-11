@@ -1,8 +1,36 @@
+"use client";
 import Link from "next/link";
 import { FcGoogle } from "react-icons/fc";
 import { Sparkles } from "lucide-react";
+import { Button } from "../ui/button";
+import { ClipLoader } from "react-spinners";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
 
 const Hero = () => {
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [guestLoading, setGuestLoading] = useState(false);
+  async function handleGoogleLogin() {
+    if (googleLoading) return;
+    setGoogleLoading(true);
+    try {
+      await signIn("google");
+    } catch (err) {
+      console.error("Google sign-in error:", err);
+      setGoogleLoading(false);
+    }
+  }
+
+  async function handleGuestLogin() {
+    if (guestLoading) return;
+    setGuestLoading(true);
+    try {
+      await signIn("guest");
+    } catch (err) {
+      console.error("Guest sign-in error:", err);
+      setGuestLoading(false);
+    }
+  }
   return (
     <section className="relative flex flex-col items-center justify-center w-full min-h-[90vh] px-6 sm:px-16 lg:px-24 py-12 bg-gradient-to-br from-white via-blue-50 to-blue-100 dark:from-neutral-900 dark:via-gray-900 dark:to-neutral-950 overflow-hidden transition-colors">
       {/* Decorative background blur circles */}
@@ -24,21 +52,44 @@ const Hero = () => {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mt-4">
-          <Link
-            href="/login"
-            className="flex items-center justify-center gap-2 bg-white border border-neutral-300 dark:bg-neutral-800 dark:border-neutral-700 rounded-xl px-6 py-4 text-base sm:text-lg font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-all duration-300 shadow-md"
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoogleLogin}
+            disabled={googleLoading || guestLoading}
+            className=" flex items-center justify-center gap-3 py-6 text-lg font-semibold border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-70 transition-colors"
           >
-            <FcGoogle className="text-2xl" />
-            Continue with Google
-          </Link>
+            {googleLoading ? (
+              <>
+                <ClipLoader color="#3B82F6" size={22} />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <FcGoogle className="text-2xl" />
+                Continue with Google
+              </>
+            )}
+          </Button>
 
-          <Link
-            href="/login"
-            className="flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white rounded-xl px-6 py-4 text-base sm:text-lg font-semibold shadow-md hover:scale-105 transition-transform duration-300"
+          <Button
+            type="button"
+            onClick={handleGuestLogin}
+            disabled={guestLoading || googleLoading}
+            className=" bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-bold py-6 rounded-xl shadow-lg flex items-center justify-center gap-3 transform hover:scale-105 transition-transform duration-300 disabled:opacity-70"
           >
-            <Sparkles className="w-5 h-5" />
-            Try for Free 🎉
-          </Link>
+            {guestLoading ? (
+              <>
+                <ClipLoader color="#ffffff" size={22} />
+                <span>Starting trial...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5" />
+                Try for Free! 🎉 No Login
+              </>
+            )}
+          </Button>
         </div>
 
         <p className="text-sm text-neutral-500 dark:text-neutral-400 italic">
