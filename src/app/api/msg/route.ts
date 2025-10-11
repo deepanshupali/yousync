@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { pusher } from "@/lib/pusher";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { roomId, userId, text } = await req.json();
     console.log("Received message:", { roomId, userId, text });
