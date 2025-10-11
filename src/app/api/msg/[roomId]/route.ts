@@ -3,11 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { roomId: string } }
+  context: { params: Promise<{ roomId: string }> }
 ) {
-  const data = params;
+  const { roomId } = await context.params; // ✅ params is a Promise here
+
   const messages = await prisma.message.findMany({
-    where: { roomId: data.roomId },
+    where: { roomId },
     orderBy: { createdAt: "asc" },
     include: { user: true },
   });
