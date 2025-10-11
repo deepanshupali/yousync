@@ -5,7 +5,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { roomId: string } }
 ) {
-  const data = await params;
+  const data = params;
   const messages = await prisma.message.findMany({
     where: { roomId: data.roomId },
     orderBy: { createdAt: "asc" },
