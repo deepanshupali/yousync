@@ -84,10 +84,20 @@ export default function RoomClient({
     channel.bind("video-loaded", (data: { videoUrl: string }) =>
       setVideoUrl(data.videoUrl)
     );
+    // channel.bind(
+    //   "video-state-updated",
+    //   (data: { playing: boolean; position: number }) =>
+    //     setVideoState({ playing: data.playing, position: data.position })
+    // );
     channel.bind(
       "video-state-updated",
-      (data: { playing: boolean; position: number }) =>
-        setVideoState({ playing: data.playing, position: data.position })
+      (data: { playing: boolean; position: number }) => {
+        // 👉 Admin already knows the state (they caused it),
+        // so ignore Pusher updates on admin side to avoid loops.
+        if (isAdmin) return;
+
+        setVideoState({ playing: data.playing, position: data.position });
+      }
     );
 
     return () => pusherClient.unsubscribe(`room-${roomInfo.id}`);
