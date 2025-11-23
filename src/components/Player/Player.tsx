@@ -18,6 +18,9 @@ export default function Player({
   position: number;
 }) {
   const playerRef = useRef<any>(null);
+  //new
+  const suppressNextUpdate = useRef(false);
+
   const containerRef = useRef<HTMLDivElement>(null); // ✅ wrapper for fullscreen
   const [isReady, setIsReady] = useState(false);
   const hasInitialized = useRef(false);
@@ -83,7 +86,12 @@ export default function Player({
       const current = player.getCurrentTime?.() || 0;
       const diff = Math.abs(current - position);
 
-      if (diff > 1) player.seekTo(position, true);
+      // if (diff > 1) player.seekTo(position, true);
+      // new
+      if (diff > 1) {
+        suppressNextUpdate.current = true; // prevent loop
+        player.seekTo(position, true);
+      }
 
       const state = player.getPlayerState?.();
       if (playing && state !== YouTube.PlayerState.PLAYING) {
@@ -162,6 +170,11 @@ export default function Player({
 
   const onStateChange: YouTubeProps["onStateChange"] = (event) => {
     if (!playerRef.current) return;
+    //new
+    if (suppressNextUpdate.current) {
+      suppressNextUpdate.current = false;
+      return; // 🚫 stop repeated PATCH loops
+    }
 
     const currentTime = playerRef.current.getCurrentTime();
 
